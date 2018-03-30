@@ -9,6 +9,7 @@
 from visual import *
 from copy import copy
 from copy import deepcopy
+from time import sleep
 import random
 from math import pi
 
@@ -47,9 +48,10 @@ class flower:
 #### objects
     manifest = {} # the manifest of the flower objects
     stem = {}
+    bud = {}
 
 #### actually constants to the class
-    stempath = [ (0,0,0), (-0.02,-1,0), (-0.1,-2.5,0),(-0.15,-2.7,0),(-.17,-2.75,0),(-.2,-2.9,0)]
+    stempath = [ (0,0,0), (-0.02,-1,0), (-0.1,-2.5,0),(-0.15,-3.2,0),(-.17,-3.9,0),(-.2,-4.20,0)]
     NUM_FLOWER_PIECES = 0
     AmpWidth = 0 # ; how often does it grow or shrink or not
     RotFreq = 0 #how fast does it rotate
@@ -73,6 +75,8 @@ class flower:
         try:
             if(params["Offset"]):
                 self.offset = params["Offset"]
+                self.stempath = [ (0,0,0), (-0.02,-2,0), (-0.1,-3.5,0),(-0.15,-4.2,0),(-.17,-4.9,0),(-.2,-5.20,0)]
+
                 for i in range(len(self.stempath) ):
                     self.stempath[i]=(self.stempath[i][0] + self.offset.x ,self.stempath[i][1]+ self.offset.y,self.offset.z)
         except KeyError:
@@ -141,22 +145,6 @@ class flower:
 ## member functions
   
 
-################## appending to arrays
-    # push a new point to the current array..
-    # this class is a helper function for plotpoint
-    #uses:
-    #   offset
-    def appendtoCurrent( self, newPoint ,ind ):
-        self.instant[ind] = newPoint
-
-        return
-
-    def CleanandStore (self):
-        #self.past.append( deepcopy(self.instant) )
-        del self.instant
-        self.instant = [None]*self.NUM_FLOWER_PIECES
-        return
-
 ##################################
 ###################
     # only on the time used, it will math that shit up, does this for
@@ -165,18 +153,26 @@ class flower:
     def calc_Store (self, time):
         pointCalc = [None] * 3
         pointSend = (0,0,0)
-        ###time to puttogether
-        self.SetParams[4] = time # this is the only parameter that changes, [2] will range from 0 to 2pi every time.
+        
+        ###time to put together
+        #calculate the next state of the flower for iterating 0 to 2pi with
+        #    flower calculator.
+        #
+        #f(theta, t) :: so we set t, and iterate all of thetas.
+        
+         
+        self.SetParams[4] = time # this is the only parameter that changes,
 
+        
         #every time we calculate a new flower or its shape, we
-        #go in range 0 to 2*pi, thats how long the length is,
+        #go in range 0 to (2*pi - dTheta) , that is one period. a 360.
         for piece in range(self.NUM_FLOWER_PIECES):
             theta = (2*pi)/(self.NUM_FLOWER_PIECES-1) * piece # ranges from 0 to 2Pi in num pieces complextity
             self.SetParams[2] = theta # set the current theta
 
             #first we calculate the points without the offset, mind you they will be in polar
             pointCalc[0] = theta
-            pointCalc[1] = calcPolarCoor( copy(self.SetParams) )
+            pointCalc[1] = calcFlower( copy(self.SetParams) ) # pass a shallow copy, only references. 
 
             #convert that to rectangular...
             pointSend = ptor(pointCalc)
@@ -185,7 +181,7 @@ class flower:
             pointSend = ( pointSend[0] + self.offset.x, pointSend[1] + self.offset.y, self.offset.z)
             
             #then finally..
-            self.instant[piece]= pointSend  # add it so the collectin
+            self.instant[piece]= pointSend  # add it so the collection .. the size of the array always varies from 0 to number
 
             #self.appendtoCurrent(pointSend,piece) #after we calculate. store.
         return
@@ -197,12 +193,17 @@ class flower:
     #deletes stuff as well.
     def ToggleManifest(self):
         if( not self.manifest):
+            #basically create all the shapes into the display windo.
             self.manifest = curve ( color= self.colour , radius = self.radius/5)
-            self.stem = curve( color=color.green, radius = 0.08, pos = self.stempath )
+            self.stem = curve( color=color.green, radius = 0.12, pos = self.stempath )
+            circ = shapes.circle( pos= (0,0), radius= self.radius )
+            self.bud= extrusion ( pos= self.offset, shape = circ, color= self.colour)
             
         else:
             self.manifest.visible = False
+            self.bud.visible = False
             self.stem.visible = False
+            del self.bud
             del self.stem
             del self.manifest                              
             
@@ -212,6 +213,11 @@ class flower:
             self.manifest.pos = deepcopy(self.instant) # set the current stuff to the newly added stuff
         return
 
+    ## appends for storing or doesnt.
+    ## always deletes the array and starts it again
+    def CleanandStore (self):
+        #self.past.append( deepcopy(self.instant) )
+        return
 
 #############################################
 #### no more flower class #
@@ -230,16 +236,36 @@ def ptor (polar): #polar to rectangular
 
 #params = [Amplitude Range, numLeafs , theta, phase shift rate(omega) , phase shift (time),  initial radius]
 # f(theta,t) = ChangeAmplitude * sin( numleafs * theta + phi*t ) +initial radius
-def calcPolarCoor(params):
+def calcFlower(params):
     return ( abs( params[0] * cos( params[1]*params[2] + params[3]*params[4] ) )+ params[5])    
    
       
 
+class sun:
+
+    def __init__(self):
+        self.globe = sphere (radius = 1.5, material=materials.emissive, pos=vector(0,30,0) )
+        self.lampz={}
+        for let in range(3):
+           self.lampz[ str(let) ]  = local_light(pos=(0,30,let*50 - 50 ), color= color.white)
+        return
+
+    def moveSun(self,time):
+        for key, value in self.lampz.items():
+            value.pos = vector(100*sin(t),30*cos(t),value.pos.z)
+
+        self.globe.pos = vector(100*sin(t),30*cos(t),self.globe.pos.z)
+        return
+
+    
 
 
 
 
-universe = display (fullscreen= True, background = color.white ,x=500,y=0, width=500, height = 300, autoscale = True )
+universe = display (fullscreen= True, x=500,y=0, width=500, height = 300, autoscale = True )
+#reset all the lights on the stage.
+universe.ambient = (0,0,0)
+universe.lights= []
 
 #my flowers
 ### init those useful variables.
@@ -247,11 +273,14 @@ universe = display (fullscreen= True, background = color.white ,x=500,y=0, width
 my_flowers = {}
 t= 0
 dt= 0.02
+grass= box (width =100, length=100,height=0.5, pos=vector(0,-2.5,0) , color=(0,100.0/255.0,0))
+soil = box (width =100, length=100,height=1, pos=vector(0,-3,0) , color=(139.0/255,69.0/255,19.0/255.0) )
 
+lightSun = sun()
 
 num_flowers =  30
 
-##params =  { "bigO" :0,
+##    { "bigO" :0,
 ##      "Amp": 0,
 ##      "Rotate": 0,
 ##      "Radius": 0,
@@ -260,11 +289,10 @@ num_flowers =  30
 ##      }\
 for i in range (num_flowers):
     params =  { "bigO" : 35,
-                "Offset": vector (rand_float(-25,25),rand_float(-25,25),rand_float(-25,25)),
-                "Leaves": 3
+                "Offset": vector (rand_float(-50,50),4 ,rand_float(-50,50)),
+                "Leaves": 4
                 #"Leaves": (2*rand_int(1,2) + 1)
                 }
-
     my_flowers[ str(i**3)] =  flower(params,(rand_float(0,1),rand_float(0,1),rand_float(0,1) )  )
 
 
@@ -290,9 +318,11 @@ while ( t < 20 ):
     for key,flow in my_flowers.items():
         flow.setManifest()
 
-    #now store that data and calculate it again
+    #now store that data and clean up to calculate it again.
     for key,flow in my_flowers.items():
         flow.CleanandStore()
+
+    lightSun.moveSun(t)
         
     t = t + dt
 
