@@ -38,7 +38,7 @@ class Flower_parser:
 # desc: 
 #variables:
 #has its current and past life
-#   instant: an array of points, that resembles its current state
+#   CurrentState: an array of points, that resembles its current state
 #   past: [ [] ] an array of past points. at the tend, [0] = t:0, [n] = t:f;
 #
 #has manfiest specific load details
@@ -46,7 +46,7 @@ class Flower_parser:
 class flower:    
 ######################
 ### variables
-    instant = [] #the array of tuples to be used    
+    CurrentState = [] #the array of tuples to be used    
     past = [ ] #the previous points. secretely a 2D array...
                 ###3D array if you count the tuples
 #### objects
@@ -91,10 +91,10 @@ class flower:
         try:
             if(params["bigO"]):
                 self.NUM_FLOWER_PIECES = params["bigO"]
-                self.instant = [None] * params["bigO"]
+                self.CurrentState = [None] * params["bigO"]
         except KeyError:
             self.NUM_FLOWER_PIECES = 10 #defualt
-            self.instant = [None]*10
+            self.CurrentState = [None]*10
             pass
         ##leavs################    
         try:
@@ -154,7 +154,7 @@ class flower:
     # only on the time used, it will math that shit up, does this for
     # the whole flower every DT slice.
     # and then store it will the other helper functino.
-    def calc_Store (self, time):
+    def calc_Store (self, time, NightTime = False):
         pointCalc = [None] * 3
         pointSend = (0,0,0)
         
@@ -185,9 +185,8 @@ class flower:
             pointSend = ( pointSend[0] + self.offset.x, pointSend[1] + self.offset.y, self.offset.z)
             
             #then finally..
-            self.instant[piece]= pointSend  # add it so the collection .. the size of the array always varies from 0 to number
+            self.CurrentState[piece]= pointSend  # add it so the collection .. the size of the array always varies from 0 to number
 
-            #self.appendtoCurrent(pointSend,piece) #after we calculate. store.
         return
         
                          
@@ -200,7 +199,7 @@ class flower:
             #basically create all the shapes into the display windo.
             self.manifest = curve ( color= self.colour , radius = self.radius/5)
             self.stem = curve( color=color.green, radius = 0.12, pos = self.stempath )
-            circ = shapes.circle( pos= (0,0), radius= self.radius )
+            circ = shapes.circle( pos= (0,0), radius= self.radius ) #TEMP 2d shape
             self.bud= extrusion ( pos= self.offset, shape = circ, color= self.colour)
             
         else:
@@ -213,14 +212,14 @@ class flower:
             
         return
     def setManifest(self):
-        if(len(self.instant)):
-            self.manifest.pos = deepcopy(self.instant) # set the current stuff to the newly added stuff
+        if(len(self.CurrentState)):
+            self.manifest.pos = deepcopy(self.CurrentState) # set the current stuff to the newly added stuff
         return
 
     ## appends for storing or doesnt.
     ## always deletes the array and starts it again
     def CleanandStore (self):
-        #self.past.append( deepcopy(self.instant) )
+        #self.past.append( deepcopy(self.CurrentState) )
         return
 
 #############################################
@@ -248,17 +247,17 @@ def calcFlower(params):
 class sun:
 
     def __init__(self):
-        self.globe = sphere (radius = 1.5, material=materials.emissive, pos=vector(0,30,0) )
+        self.globe = sphere (radius = 1.5, material=materials.emissive, pos=vector(0,-30,0) )
         self.lampz={}
         for let in range(3):
-           self.lampz[ str(let) ]  = local_light(pos=(0,30,let*50 - 50 ), color= color.white)
+           self.lampz[ str(let) ]  = local_light(pos=(0,-30,let*50 - 50 ), color= color.white)
         return
 
     def moveSun(self,time):
         for key, value in self.lampz.items():
-            value.pos = vector(100*sin(t),30*cos(t),value.pos.z)
+            value.pos = vector(100*sin(t),-30*cos(t),value.pos.z)
 
-        self.globe.pos = vector(100*sin(t),30*cos(t),self.globe.pos.z)
+        self.globe.pos = vector(100*sin(t),-30*cos(t),self.globe.pos.z)
         return
 
     
