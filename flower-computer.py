@@ -1,7 +1,11 @@
 #############################
 ###Author: Conner Maddalozzo
 #date: 3/26/18
-#desc: computing many  flowers into a parseble language
+#desc: computing many  flowers it a garden and simulating the suns cycle
+#around the wildlife
+
+
+#into a parseble language
 # than displaying the comouted coordinates inti an animation
 #than later using those pre assebmled coordinates to simulate the flower
 #in motion.
@@ -290,11 +294,10 @@ num_flowers =  30
 for i in range (num_flowers):
     params =  { "bigO" : 35,
                 "Offset": vector (rand_float(-50,50),4 ,rand_float(-50,50)),
-                "Leaves": 4
+                "Leaves": 3
                 #"Leaves": (2*rand_int(1,2) + 1)
                 }
     my_flowers[ str(i**3)] =  flower(params,(rand_float(0,1),rand_float(0,1),rand_float(0,1) )  )
-
 
 
 ### now all of our flowers exsit. time to wake them up.
