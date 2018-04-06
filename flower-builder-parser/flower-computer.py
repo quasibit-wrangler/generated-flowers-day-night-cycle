@@ -25,6 +25,32 @@ def rand_float(a,b):
 def rand_int(start,end):    #returns a random integere
     return random.randint(start,end)
 
+#returns a string of the whole file.. yea..
+def recordFile(textfile):
+    rawArrays=[]
+    encoded = ''
+    count = 0
+
+    #first we push it in a bunch of small array indexes.
+    with open(textfile,'r') as flourdata:
+        for line in flourdata:
+            if '&' in line:
+                print ("hey another flower")                        
+            encoded += line
+            if(count % 500 == 0):
+                rawArrays.append(encoded)
+                encoded = ''
+                pass
+            count += 1
+
+            
+    #now we combine them in to one funciton.
+    #for i in range(len(rawArrays) ):
+        #encoded += rawArrays[i]
+    encoded = ''
+    encoded = encoded.join( rawArrays)
+    print ('sccess', encoded[:10] )
+    return encoded 
 
 
 
@@ -79,17 +105,15 @@ class Flower_parser:
         print ("the file has been closed :)")
         return
 
+    #due to the nature of the vast size of the text, it just isnt efficent.
+    #need to appand stuff right away.
+
     def parseText(self,textfile = "../forecasted-data/flowerdata.txt"):
         encoded = ''
         data = []
-        count = 0
-        with open(textfile,'r') as flourdata:
-            for line in flourdata:
-                count += 1
-                if(count % 2000 == 0):
-                    print(line)
-                encoded += line
-        print(' now its time to split the the first time ')                
+
+        encoded = recordFile(textfile)
+        
         #first we split up the flowers
         data = encoded.split('&\n')
 
@@ -101,22 +125,16 @@ class Flower_parser:
             
             #for everty piece of time there is a state
             for timechunk in range(len(data[flower])):
-                sys.stdout.write(' %d chunk done\t' % timechunk)
                 
                 data[flower][timechunk] = data[flower][timechunk].split(':')
+                data[flower][timechunk].pop() # i think i made one extra bigger
+
 
                 #for every state there are coordinates
                 for coor in range(len(data[flower][timechunk]) ):
                     temp = data[flower][timechunk][coor].split(',')
                     data[flower][timechunk][coor] = ( int(temp[0]), int(temp[1]), int(temp[2]))
-                #remove the end coordinate
-                data[flower][timechunk].pop()
-
-            ##clear buffer
-            sys.stdout.flush()
-            print('\n')
-            ###
-                    
+                #remove the end coordinate                    
             data[flower].pop() #remove the last element time chunk thats null
         #remove the null flower
         data.pop()
@@ -302,7 +320,7 @@ class flower:
     #basically this is an array of coordinates, that we assign to the 
     def SetNewState(self, state):
         self.CurrentState = state #this should be hte only thing needing to be set
-        
+        self.offset= vector (state[0][0],state[0][1],state[0][2])
 ###############################
 ####
     #turns on the manifest and turns it off in one funtion.
@@ -310,7 +328,7 @@ class flower:
     def ToggleManifest(self):
         if( not self.manifest):
             #basically create all the shapes into the display windo.
-            self.manifest = curve ( color= self.colour , radius = self.radius/5)
+            self.manifest = curve ( color= self.colour , radius = .34)
             self.stem = curve( color=color.green, radius = 0.12, pos = self.stempath )
             circ = shapes.circle( pos= (0,0), radius= self.radius ) #TEMP 2d shape
             self.bud= extrusion ( pos= self.offset, shape = circ, color= self.colour)
@@ -418,6 +436,7 @@ else:
     
     for i in range ( len(library.archive) ):
         params =  { "bigO" : len(library.archive[0][0])
+                    
                     }
         my_flowers[ str(i**3)] =  flower(params,(rand_float(0,1),rand_float(0,1),rand_float(0,1) )  )
     
@@ -438,14 +457,14 @@ lightSun = sun()
 flower_iter = 0
 
 
-#here we set up the state reguardles of automation
-for key,flow in my_flowers.items():
 
-    flow.ToggleManifest()
                        
 
 #moving animation loop.   
 if(not Automated):
+    for key,flow in my_flowers.items():
+        flow.ToggleManifest()
+    
     while ( t < 8):
         rate(1/dt)
 
@@ -472,26 +491,25 @@ if(not Automated):
     
 #if it is automated, then we open up the archive
 else:
-    
+    for key,flower in my_flowers.items():
+
+        flower.SetNewState(library.archive[flower_iter][t])
+        flower.ToggleManifest()
 
     
 
     #then just for the length of the array
 
     while (t < len(library.archive[0]) ):
-        rate (200)
+        rate (300)
         flower_iter = 0
         
         #each step in time we load that into the set new state
         for key,flower in my_flowers.items():
-            flower.SetNewState(library.archive[flower_iter][t])
+            #flower.SetNewState(library.archive[flower_iter][t])
+            flower.manifest.pos = deepcopy(library.archive[flower_iter][t]) # set the current stuff to the newly added stuff
             flower_iter += 1
             
-        #after all the states have been loaded, we toggle them
-        for key,flower in my_flowers.items():
-            flower.setManifest()
-
-
         lightSun.moveSun(t*0.02)
 
         t +=1
