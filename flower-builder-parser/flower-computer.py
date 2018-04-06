@@ -37,14 +37,14 @@ class Flower_parser:
 
     ## member functions ###
 
-    def Pickle(self,flowers,filename = "pickleflowerdata.txt"):
+    def Pickle(self,flowers,filename = "../forecasted-data/pickleflowerdata.txt"):
       
         return
-    def dePickle(self, textfile = "pickleflowerdata.txt"):
+    def dePickle(self, textfile = "../forecasted-data/pickleflowerdata.txt"):
 
         return
 
-    def ExtractMyway(self,flowers,filename = "flowerdata.txt"):
+    def ExtractMyway(self,flowers,filename = "../forecasted-data/flowerdata.txt"):
         partialString = ""
      
 
@@ -79,14 +79,17 @@ class Flower_parser:
         print ("the file has been closed :)")
         return
 
-    def parseText(self,textfile = "flowerdata.txt"):
+    def parseText(self,textfile = "../forecasted-data/flowerdata.txt"):
         encoded = ''
         data = []
-
-        with open(textfile) as flourdata:
+        count = 0
+        with open(textfile,'r') as flourdata:
             for line in flourdata:
+                count += 1
+                if(count % 2000 == 0):
+                    print(line)
                 encoded += line
-                
+        print(' now its time to split the the first time ')                
         #first we split up the flowers
         data = encoded.split('&\n')
 
@@ -386,7 +389,7 @@ dt= 0.02
 
 num_flowers =  25
 
-Automated = 0
+Automated = 1
 
 ##    { "bigO" :0,
 ##      "Amp": 0,
