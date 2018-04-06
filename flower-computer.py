@@ -29,11 +29,96 @@ def rand_int(start,end):    #returns a random integere
 
 
 #inputs... arrray of objects?
-class Flower_parser:
-    def __init__ (self,flowers):
+class Flower_parser:   
+
+    ###member variables ###
+    archive = [ [ [] ] ]
+
+    ## member functions ###
+
+    def Pickle(self,flowers,filename = "pickleflowerdata.txt"):
+      
+        return
+    def dePickle(self, textfile = "pickleflowerdata.txt"):
 
         return
-    archive = [ [ [] ] ]
+
+    def ExtractMyway(self,flowers,filename = "flowerdata.txt"):
+        partialString = ""
+     
+
+        with open(filename, 'w') as out:
+            
+            #now we iterate over all the memory contained in the file
+            for key,flower in flowers.items():
+
+                #now we iterate over all the chunks of time
+                for timechunk in flower.past:
+
+                    #now we iterat over a single chunk of time
+                    for pos in timechunk:
+
+                        #there are thre coordinates in each
+                        #for coor in range(3):
+                         #   partialString += ("%d," % pos[coor])
+                          #  #out.write("%d," % pos[coor])
+                        partialString += ('%d,%d,%d' %(pos[0],pos[1],pos[2]) )
+                        
+                        partialString += ':'
+
+                    partialString += '\n'
+                    out.write(partialString)
+                    
+                    partialString =''
+                    
+                print('flower %s has been written' % key)   
+                out.write("&\n") #the 
+            
+
+        print ("the file has been closed :)")
+        return
+
+    def parseText(self,textfile = "flowerdata.txt"):
+        encoded = ''
+        data = []
+
+        with open(textfile) as flourdata:
+            for line in flourdata:
+                encoded += line
+                
+        #first we split up the flowers
+        data = encoded.split('&\n')
+
+        #then for those we split up each chunk of time
+        for flower in range(len(data) ):
+            data[flower] = data[flower].split('\n')
+            
+            #for everty piece of time there is a state
+            for timechunk in range(len(data[flower])):
+                data[flower][timechunk] = data[flower][timechunk].split(':')
+
+                #for every state there are coordinates
+                for coor in range(len(data[flower][timechunk]) ):
+                    data[flower][timechunk][coor] = data[flower][timechunk][coor].split(',')
+
+                #remove the end coordinate
+                data[flower][timechunk].pop()
+                    
+            data[flower].pop() #remove the last element time chunk thats null
+        #remove the null flower
+        data.pop()
+        
+            
+        print ('\n\n \t finished the decrypting \n\n')
+        print('Here are the statitics:, \n \t')
+        print( '%d : the # of flowers, \n %d : the number of time chunks, \n %d : the number of pieces' % ( len(data), len(data[0]), len (data[0][0]) ) )
+        print ('%d : the number of coordinates' % len(data[0][0][0]) )
+
+
+        self.archive = data
+        return
+
+    
 #flower
 # desc: 
 #variables:
@@ -75,73 +160,87 @@ class flower:
     #... if one it omitted it has a default value
 #def __init__(self, bigO, Amp = 0, Rotate = 0.5, Rad = 0.5, col = (0,0,0) ):
     def __init__(self, params, col = color.red ):
-        ###OFFSET ############
-        try:
-            if(params["Offset"]):
-                self.offset = params["Offset"]
-                self.stempath = [ (0,0,0), (-0.02,-2,0), (-0.1,-3.5,0),(-0.15,-4.2,0),(-.17,-4.9,0),(-.2,-5.20,0)]
+        if(not params):
 
-                for i in range(len(self.stempath) ):
-                    self.stempath[i]=(self.stempath[i][0] + self.offset.x ,self.stempath[i][1]+ self.offset.y,self.offset.z)
-        except KeyError:
-            self.offset = vector(0,0,0) #defualt
-            pass
+
+            return
+
+        #else we are custom seeing this stuff
+        else:
             
-        #complexity#############
-        try:
-            if(params["bigO"]):
-                self.NUM_FLOWER_PIECES = params["bigO"]
-                self.CurrentState = [None] * params["bigO"]
-        except KeyError:
-            self.NUM_FLOWER_PIECES = 10 #defualt
-            self.CurrentState = [None]*10
-            pass
-        ##leavs################    
-        try:
-            if(params["Leaves"]):
-                self.leaves = params["Leaves"] ### [ delta size, speed ] it flexes adn changes size]
-                self.SetParams[1] = params["Leaves"]
+            ###OFFSET ############
+            try:
+                if(params["Offset"]):
+                    self.offset = params["Offset"]
+                    self.stempath = [ (0,0,0), (-0.02,-2,0), (-0.1,-3.5,0),(-0.15,-4.2,0),(-.17,-4.9,0),(-.2,-5.20,0)]
+
+                    for i in range(len(self.stempath) ):
+                        self.stempath[i]=(self.stempath[i][0] + self.offset.x ,self.stempath[i][1]+ self.offset.y,self.offset.z)
+            except KeyError:
+                self.offset = vector(0,0,0) #defualt
+                pass
                 
-        except KeyError:
-            self.leaves = 5 #defualt
-            self.SetParams[1] = 5
-            pass
-        ##expand################    
-        try:
-            if(params["Amp"]):
-                self.AmpWidth = params["Amp"] ### [ delta size, speed ] it flexes adn changes size]
-                self.SetParams[0] = params["Amp"]
-        except KeyError:
-            self.SetParams[0] = 2
-            self.AmpWidth = 2 #defualt
-            pass
-        
-        ###rotate ########################
-        try:
-            if(params["Rotate"]):
-                self.RotFreq = params["Rotate"]
-                self.SetParams[3] = params["Rotate"]
-                
-        except KeyError:
-            self.RotFreq = 10.0 #defualt
-            self.SetParams[3] = 5.0
-            pass
-        
-        ###size#####################
-        try:
-            if(params["Radius"]):
-                self.radius = params["Radius"]
-                self.SetParams[5] = params["Radius"]
-        except KeyError:
-            self.radius = 0.75 #defualt
-            self.SetParams[5] = 0.75
+            #complexity#############
+            try:
+                if(params["bigO"]):
+                    self.NUM_FLOWER_PIECES = params["bigO"]
+                    self.CurrentState = [None] * params["bigO"]
+            except KeyError:
+                self.NUM_FLOWER_PIECES = 10 #defualt
+                self.CurrentState = [None]*10
+                pass
+            ##leavs################    
+            try:
+                if(params["Leaves"]):
+                    self.leaves = params["Leaves"] ### [ delta size, speed ] it flexes adn changes size]
+                    self.SetParams[1] = params["Leaves"]
+                    
+            except KeyError:
+                self.leaves = 5 #defualt
+                self.SetParams[1] = 5
+                pass
+            ##expand################    
+            try:
+                if(params["Amp"]):
+                    self.AmpWidth = params["Amp"] ### [ delta size, speed ] it flexes adn changes size]
+                    self.SetParams[0] = params["Amp"]
+            except KeyError:
+                self.SetParams[0] = 2
+                self.AmpWidth = 2 #defualt
+                pass
             
-            pass
-        
-     ################# 00            11         22              33                   44                     55
-        #params = [Amplitude Range, numLeafs , theta, phase shift rate(omega) , phase shift (time),  initial radius]
-        
-        self.colour = col
+            ###rotate ########################
+            try:
+                if(params["Rotate"]):
+                    self.RotFreq = params["Rotate"]
+                    self.SetParams[3] = params["Rotate"]
+                    
+            except KeyError:
+                self.RotFreq = 10.0 #defualt
+                self.SetParams[3] = 10.0
+                pass
+            
+            ###size#####################
+            try:
+                if(params["Radius"]):
+                    self.radius = params["Radius"]
+                    self.SetParams[5] = params["Radius"]
+            except KeyError:
+                self.radius = 0.75 #defualt
+                self.SetParams[5] = 0.75
+                
+                pass
+            ###automation#####################
+            self.auto = params["Automated"]
+               
+            
+         ################# 00 
+         ################# 00            11         22              33                   44                     55
+            #params = [Amplitude Range, numLeafs , theta, phase shift rate(omega) , phase shift (time),  initial radius]
+            
+            self.colour = col
+
+            
         return
 
    
@@ -163,8 +262,7 @@ class flower:
         #    flower calculator.
         #
         #f(theta, t) :: so we set t, and iterate all of thetas.
-        
-         
+                
         self.SetParams[4] = time # this is the only parameter that changes,
 
         
@@ -219,7 +317,7 @@ class flower:
     ## appends for storing or doesnt.
     ## always deletes the array and starts it again
     def CleanandStore (self):
-        #self.past.append( deepcopy(self.CurrentState) )
+        self.past.append( deepcopy(self.CurrentState))
         return
 
 #############################################
@@ -263,25 +361,20 @@ class sun:
     
 
 
+library = Flower_parser()
 
 
-universe = display (fullscreen= True, x=500,y=0, width=500, height = 300, autoscale = True )
-#reset all the lights on the stage.
-universe.ambient = (0,0,0)
-universe.lights= []
 
 #my flowers
 ### init those useful variables.
 #my_flowers = []
 my_flowers = {}
 t= 0
-dt= 0.02
-grass= box (width =100, length=100,height=0.5, pos=vector(0,-2.5,0) , color=(0,100.0/255.0,0))
-soil = box (width =100, length=100,height=1, pos=vector(0,-3,0) , color=(139.0/255,69.0/255,19.0/255.0) )
+dt= 0.5
 
-lightSun = sun()
+num_flowers =  10
 
-num_flowers =  30
+Automated = 0
 
 ##    { "bigO" :0,
 ##      "Amp": 0,
@@ -289,17 +382,39 @@ num_flowers =  30
 ##      "Radius": 0,
 ##      "Leaves":0
 ##      "Offset": vector(x,y,z)
+##      "Automated": 0 or 1
 ##      }\
-for i in range (num_flowers):
-    params =  { "bigO" : 35,
-                "Offset": vector (rand_float(-50,50),4 ,rand_float(-50,50)),
-                "Leaves": 3
-                #"Leaves": (2*rand_int(1,2) + 1)
-                }
-    my_flowers[ str(i**3)] =  flower(params,(rand_float(0,1),rand_float(0,1),rand_float(0,1) )  )
+
+
+if (not Automated):
+    for i in range (num_flowers):
+        params =  { "bigO" : 40,
+                    "Offset": vector (rand_float(-50,50),4 ,rand_float(-50,50)),
+                    "Leaves": 3,
+                    "Radius": rand_float(0.5,1.25),
+                    "Amp": rand_float(1.0,3.0),
+                    #"Leaves": (2*rand_int(1,2) + 1)
+                    }
+        #print params ? 
+        sleep(0.25) # the random number generator needs to be mor random, so i delay it a bit
+        my_flowers[ str(i**3)] =  flower(params,(rand_float(0,1),rand_float(0,1),rand_float(0,1) )  )
+
+
+
+
 
 
 ### now all of our flowers exsit. time to wake them up.
+universe = display (fullscreen= True, x=500,y=0, width=500, height = 300, autoscale = True )
+#reset all the lights on the stage.
+universe.ambient = (0,0,0)
+universe.lights= []
+
+    
+grass= box (width =100, length=100,height=0.5, pos=vector(0,-2.5,0) , color=(0,100.0/255.0,0))
+soil = box (width =100, length=100,height=1, pos=vector(0,-3,0) , color=(139.0/255,69.0/255,19.0/255.0) )
+
+lightSun = sun()
 
 #for flow in my_flowers[:]:
 for key,flow in my_flowers.items():
@@ -308,30 +423,45 @@ for key,flow in my_flowers.items():
                        
 
 #moving animation loop.   
+if(not Automated):
+    while ( t < 100):
+        rate(50)
 
-while ( t < 20 ):
-    rate(1/dt)
+        #stage one. calculate all the new flowers
+        for key,flow in my_flowers.items():
+            flow.calc_Store( t )
+            
+        #complete, stage two, put that stuff on the screen
+        for key,flow in my_flowers.items():
+            flow.setManifest()
 
-    #stage one. calculate all the new flowers
-    for key,flow in my_flowers.items():
-        flow.calc_Store( t*0.5 )
+        #now store that data and clean up to calculate it again.
+        for key,flow in my_flowers.items():
+            flow.CleanandStore()
+
+        lightSun.moveSun(t)
+            
+        t = t + dt
+
+    
+    library.ExtractMyway(my_flowers)
+    library.Pickle(my_flowers)
+#if it is automated, then we open up the archive
+else:
+    library.parseText()
+
+    
+
+    #then just for the length of the array
+
+    while (t < len(library.archive[0]) ):
+        rate (200)
         
-    #complete, stage two, put that stuff on the screen
-    for key,flow in my_flowers.items():
-        flow.setManifest()
+        for flower in range(len(library.archive) ):
+            
 
-    #now store that data and clean up to calculate it again.
-    for key,flow in my_flowers.items():
-        flow.CleanandStore()
-
-    lightSun.moveSun(t)
-        
-    t = t + dt
-
-
-        
-     
-
+        t +=1
+    
 
 
 #time to clean up my spheres
@@ -341,10 +471,9 @@ for key,flow in my_flowers.items():
 
 
 
+print ("goodbye")
 
 
 
 
-
-
-    
+quit()
