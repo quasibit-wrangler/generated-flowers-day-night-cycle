@@ -10,6 +10,7 @@
 #than later using those pre assebmled coordinates to simulate the flower
 #in motion.
 ###
+import sys
 from visual import *
 from copy import copy
 from copy import deepcopy
@@ -91,18 +92,27 @@ class Flower_parser:
 
         #then for those we split up each chunk of time
         for flower in range(len(data) ):
+            print ('flower %d is complete \n' % flower)
+
             data[flower] = data[flower].split('\n')
             
             #for everty piece of time there is a state
             for timechunk in range(len(data[flower])):
+                sys.stdout.write(' %d chunk done\t' % timechunk)
+                
                 data[flower][timechunk] = data[flower][timechunk].split(':')
 
                 #for every state there are coordinates
                 for coor in range(len(data[flower][timechunk]) ):
-                    data[flower][timechunk][coor] = data[flower][timechunk][coor].split(',')
-
+                    temp = data[flower][timechunk][coor].split(',')
+                    data[flower][timechunk][coor] = ( int(temp[0]), int(temp[1]), int(temp[2]))
                 #remove the end coordinate
                 data[flower][timechunk].pop()
+
+            ##clear buffer
+            sys.stdout.flush()
+            print('\n')
+            ###
                     
             data[flower].pop() #remove the last element time chunk thats null
         #remove the null flower
@@ -161,8 +171,7 @@ class flower:
 #def __init__(self, bigO, Amp = 0, Rotate = 0.5, Rad = 0.5, col = (0,0,0) ):
     def __init__(self, params, col = color.red ):
         if(not params):
-
-
+            print ('error')
             return
 
         #else we are custom seeing this stuff
@@ -231,7 +240,6 @@ class flower:
                 
                 pass
             ###automation#####################
-            self.auto = params["Automated"]
                
             
          ################# 00 
@@ -286,8 +294,12 @@ class flower:
             self.CurrentState[piece]= pointSend  # add it so the collection .. the size of the array always varies from 0 to number
 
         return
+
+    #mutator, uses a current state of the flower to send in the state
+    #basically this is an array of coordinates, that we assign to the 
+    def SetNewState(self, state):
+        self.CurrentState = state #this should be hte only thing needing to be set
         
-                         
 ###############################
 ####
     #turns on the manifest and turns it off in one funtion.
@@ -370,9 +382,9 @@ library = Flower_parser()
 #my_flowers = []
 my_flowers = {}
 t= 0
-dt= 0.5
+dt= 0.02
 
-num_flowers =  10
+num_flowers =  25
 
 Automated = 0
 
@@ -382,10 +394,9 @@ Automated = 0
 ##      "Radius": 0,
 ##      "Leaves":0
 ##      "Offset": vector(x,y,z)
-##      "Automated": 0 or 1
 ##      }\
 
-
+## either its computerd or its read before hand.
 if (not Automated):
     for i in range (num_flowers):
         params =  { "bigO" : 40,
@@ -395,12 +406,18 @@ if (not Automated):
                     "Amp": rand_float(1.0,3.0),
                     #"Leaves": (2*rand_int(1,2) + 1)
                     }
-        #print params ? 
         sleep(0.25) # the random number generator needs to be mor random, so i delay it a bit
         my_flowers[ str(i**3)] =  flower(params,(rand_float(0,1),rand_float(0,1),rand_float(0,1) )  )
 
-
-
+else:
+    print('\n about to read the library \n')
+    library.parseText()
+    
+    for i in range ( len(library.archive) ):
+        params =  { "bigO" : len(library.archive[0][0])
+                    }
+        my_flowers[ str(i**3)] =  flower(params,(rand_float(0,1),rand_float(0,1),rand_float(0,1) )  )
+    
 
 
 
@@ -415,8 +432,10 @@ grass= box (width =100, length=100,height=0.5, pos=vector(0,-2.5,0) , color=(0,1
 soil = box (width =100, length=100,height=1, pos=vector(0,-3,0) , color=(139.0/255,69.0/255,19.0/255.0) )
 
 lightSun = sun()
+flower_iter = 0
 
-#for flow in my_flowers[:]:
+
+#here we set up the state reguardles of automation
 for key,flow in my_flowers.items():
 
     flow.ToggleManifest()
@@ -424,8 +443,8 @@ for key,flow in my_flowers.items():
 
 #moving animation loop.   
 if(not Automated):
-    while ( t < 100):
-        rate(50)
+    while ( t < 8):
+        rate(1/dt)
 
         #stage one. calculate all the new flowers
         for key,flow in my_flowers.items():
@@ -446,9 +465,11 @@ if(not Automated):
     
     library.ExtractMyway(my_flowers)
     library.Pickle(my_flowers)
+
+    
 #if it is automated, then we open up the archive
 else:
-    library.parseText()
+    
 
     
 
@@ -456,9 +477,19 @@ else:
 
     while (t < len(library.archive[0]) ):
         rate (200)
+        flower_iter = 0
         
-        for flower in range(len(library.archive) ):
+        #each step in time we load that into the set new state
+        for key,flower in my_flowers.items():
+            flower.SetNewState(library.archive[flower_iter][t])
+            flower_iter += 1
             
+        #after all the states have been loaded, we toggle them
+        for key,flower in my_flowers.items():
+            flower.setManifest()
+
+
+        lightSun.moveSun(t*0.02)
 
         t +=1
     
