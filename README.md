@@ -1,9 +1,10 @@
 >>> For detailed vision with formatted pages and images, see the .pdf
 
 ## 0 ABSTRACT ##
+
 This simulation shows the day and night cycles of the cute community of flowers. They dance and exist all day long while they soak up the sun. Each flower is loaded with random parameters to generate random load builds, then they just exist during runtime.
 KEYWORDS
-_Python_ – scripting language used as a interpreter for c++, 
+##### _Python_ – scripting language used as a interpreter for c++, #####
 _Polar_ coordinates – a coordinate pair (theta , R), used to graph unit circles with angle specified and length from origin as the axis.
 _Pickling_ – the act of flatting data on the heap to a parse able language as a text file byte-stream.
 
