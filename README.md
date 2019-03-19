@@ -1,3 +1,8 @@
+#### deprecated,
+
+Currently visual python is deprecated into glowscript so the python code wont work,
+However if you can download the vpython+vidle package with python 2 then it might work.
+
 >>> For detailed vision with formatted pages and images, see the .pdf
 
 ## 0 ABSTRACT ##
